@@ -2,129 +2,199 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>E-Learning MM — Reboot</title>
-  <link rel="stylesheet" href="./styles.css" />
-  <!-- jsPDF (for certificates) -->
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>iHub</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <!-- PayPal SDK (replace YOUR_PAYPAL_CLIENT_ID) -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AVpfmQ8DyyatFaAGQ3Jg58XtUt_2cJDr1leqcc_JI8LvKIR2N5WB_yljqCOTTCtvK1hFJ7Q9X0ojXsEC&currency=USD"></script>
+  <!-- EmailJS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">E-Learning MM</div>
-    <div class="authbox">
-      <div id="auth-state" class="muted">…</div>
-      <button id="btn-logout" class="btn btn-light hidden">Logout</button>
-    </div>
+    <div class="brand">LearnLite</div>
+    <nav class="top-actions">
+      <button id="loginBtn" class="btn">Sign in</button>
+      <button id="logoutBtn" class="btn btn-outline hidden">Sign out</button>
+      <div id="userBadge" class="user-badge hidden"></div>
+    </nav>
   </header>
 
   <div class="layout">
-    <aside class="sidebar" id="sidebar">
-      <nav>
-        <a href="#/dashboard" data-route="dashboard" class="navlink active">Dashboard</a>
-        <a href="#/courses" data-route="courses" class="navlink">Courses</a>
-        <a href="#/profile" data-route="profile" class="navlink">Profile</a>
-        <div id="admin-block" class="admin-block hidden">
-          <div class="admin-title">Admin</div>
-          <a href="#/admin" data-route="admin" class="navlink">Admin Console</a>
+    <aside class="sidebar">
+      <div class="menu">
+        <button class="menu-item active" data-target="section-courses">Courses</button>
+        <button class="menu-item" data-target="section-profile">Profile</button>
+        <button class="menu-item" data-target="section-contact">Contact</button>
+        <div id="adminGroup" class="admin-group hidden">
+          <div class="menu-label">Admin</div>
+          <button class="menu-item" data-target="section-admin-courses">Manage Courses</button>
+          <button class="menu-item" data-target="section-admin-news">Announcements</button>
         </div>
-      </nav>
+      </div>
     </aside>
 
     <main class="content">
-      <!-- ===== AUTH PANEL ===== -->
-      <section id="page-auth" class="page hidden">
-        <div class="card auth-card">
-          <h2>Sign in</h2>
-          <label>Email <input id="auth-email" type="email" placeholder="you@example.com"/></label>
-          <label>Password <input id="auth-pass" type="password" placeholder="••••••••"/></label>
+      <!-- COURSES (public) -->
+      <section id="section-courses" class="section visible">
+        <div class="section-head">
+          <h2>Courses</h2>
+          <button id="refreshCoursesBtn" class="btn btn-outline">Refresh</button>
+        </div>
+        <div id="coursesGrid" class="grid"></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section id="section-profile" class="section">
+        <h2>Your Profile</h2>
+        <p class="muted">Signed-in users can save profile details. The “View Card” shows everything with clickable links.</p>
+        <form id="profileForm" class="form">
           <div class="row">
-            <button id="btn-login" class="btn">Login</button>
-            <button id="btn-register" class="btn btn-outline">Register</button>
+            <label>Display Name</label>
+            <input id="pfDisplayName" type="text" placeholder="Your name" />
           </div>
-          <p class="hint">The first time you log in, a profile will be created automatically.</p>
-        </div>
-      </section>
+          <div class="row">
+            <label>Bio</label>
+            <textarea id="pfBio" rows="4" placeholder="Tell us about you"></textarea>
+          </div>
+          <div class="row">
+            <label>Website</label>
+            <input id="pfWebsite" type="url" placeholder="https://example.com" />
+          </div>
+          <div class="row">
+            <label>Twitter</label>
+            <input id="pfTwitter" type="url" placeholder="https://twitter.com/you" />
+          </div>
+          <div class="row">
+            <label>GitHub</label>
+            <input id="pfGithub" type="url" placeholder="https://github.com/you" />
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn">Save Profile</button>
+            <button id="viewProfileCardBtn" type="button" class="btn btn-outline">View Card</button>
+          </div>
+        </form>
 
-      <!-- ===== DASHBOARD ===== -->
-      <section id="page-dashboard" class="page">
-        <div class="page-head">
-          <h1>Dashboard</h1>
-          <button id="btn-new-ann" class="btn hidden">New Announcement</button>
-        </div>
-        <div id="ann-list" class="list"></div>
-      </section>
-
-      <!-- ===== COURSES ===== -->
-      <section id="page-courses" class="page hidden">
-        <div class="page-head">
-          <h1>Courses</h1>
-          <div class="muted" id="course-count">…</div>
-        </div>
-        <div id="course-grid" class="grid"></div>
-      </section>
-
-      <!-- ===== COURSE DETAIL ===== -->
-      <section id="page-course-detail" class="page hidden">
-        <div class="breadcrumb"><a href="#/courses">← Back to Courses</a></div>
-        <div id="course-detail"></div>
-      </section>
-
-      <!-- ===== PROFILE ===== -->
-      <section id="page-profile" class="page hidden">
-        <div class="page-head"><h1>Profile</h1></div>
-
-        <div class="grid grid-2">
+        <div id="profileCard" class="profile-card hidden">
           <div class="card">
-            <h3>Your Info</h3>
-            <div id="profile-info">Loading…</div>
-            <label>Display Name <input id="prof-name" /></label>
-            <label>Bio (full text)</label>
-            <textarea id="prof-bio" rows="6" placeholder="Write anything — this shows in full on Profile."></textarea>
-            <label>Website URL <input id="prof-url" placeholder="https://"/></label>
-            <div class="row">
-              <button id="btn-save-profile" class="btn">Save</button>
+            <div class="card-body">
+              <h3 id="pcName">—</h3>
+              <p id="pcBio">—</p>
+              <div class="links">
+                <a id="pcWebsite" href="#" target="_blank" rel="noopener" class="hidden">Website</a>
+                <a id="pcTwitter" href="#" target="_blank" rel="noopener" class="hidden">Twitter</a>
+                <a id="pcGithub" href="#" target="_blank" rel="noopener" class="hidden">GitHub</a>
+              </div>
             </div>
           </div>
-
-          <div class="card">
-            <h3>Preview “View Card”</h3>
-            <p class="hint">Click the button to render a card from your profile data with a live link.</p>
-            <button id="btn-view-card" class="btn btn-outline">View Card</button>
-            <div id="profile-card-preview" class="mt"></div>
-          </div>
         </div>
       </section>
 
-      <!-- ===== ADMIN ===== -->
-      <section id="page-admin" class="page hidden">
-        <div class="page-head"><h1>Admin Console</h1></div>
-
-        <div class="grid grid-2">
-          <div class="card">
-            <h3>Users & Roles</h3>
-            <div id="admin-users" class="list"></div>
+      <!-- CONTACT (EmailJS) -->
+      <section id="section-contact" class="section">
+        <h2>Contact</h2>
+        <form id="contactForm" class="form">
+          <div class="row">
+            <label>Your Name</label>
+            <input id="ctName" type="text" required />
           </div>
-
-          <div class="card">
-            <h3>Create / Edit Course</h3>
-            <label>Title <input id="c-title"/></label>
-            <label>Image URL <input id="c-image" placeholder="https://… (will fit fully)"/></label>
-            <label>Short Description <input id="c-desc" /></label>
-            <label>Price (USD) <input id="c-price" type="number" min="0" value="0"/></label>
-            <label>Credits <input id="c-credits" type="number" min="0" value="0"/></label>
-            <div class="row">
-              <button id="btn-save-course" class="btn">Save Course</button>
-            </div>
-            <div id="admin-courses" class="mt"></div>
+          <div class="row">
+            <label>Your Email</label>
+            <input id="ctEmail" type="email" required />
           </div>
+          <div class="row">
+            <label>Message</label>
+            <textarea id="ctMessage" rows="4" required></textarea>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn">Send</button>
+          </div>
+          <div id="contactStatus" class="muted"></div>
+        </form>
+      </section>
+
+      <!-- ADMIN: Manage Courses -->
+      <section id="section-admin-courses" class="section">
+        <div class="section-head">
+          <h2>Manage Courses</h2>
+          <button id="newCourseBtn" class="btn">New Course</button>
         </div>
+
+        <form id="courseForm" class="form hidden">
+          <input type="hidden" id="courseId" />
+          <div class="row">
+            <label>Title</label>
+            <input id="courseTitle" type="text" required />
+          </div>
+          <div class="row">
+            <label>Image URL</label>
+            <input id="courseImage" type="url" placeholder="https://..." />
+          </div>
+          <div class="row">
+            <label>Description</label>
+            <textarea id="courseDesc" rows="3" required></textarea>
+          </div>
+          <div class="row">
+            <label>Price (USD)</label>
+            <input id="coursePrice" type="number" min="0" step="0.01" value="19.99" />
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn">Save</button>
+            <button id="cancelCourseBtn" type="button" class="btn btn-outline">Cancel</button>
+          </div>
+        </form>
+
+        <div id="adminCoursesGrid" class="grid"></div>
+      </section>
+
+      <!-- ADMIN: Announcements -->
+      <section id="section-admin-news" class="section">
+        <div class="section-head">
+          <h2>Announcements</h2>
+          <button id="newAnnouncementBtn" class="btn">New Announcement</button>
+        </div>
+
+        <form id="announcementForm" class="form hidden">
+          <input type="hidden" id="announcementId" />
+          <div class="row">
+            <label>Title</label>
+            <input id="announcementTitle" type="text" required />
+          </div>
+          <div class="row">
+            <label>Body</label>
+            <textarea id="announcementBody" rows="3" required></textarea>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn">Save</button>
+            <button id="cancelAnnouncementBtn" type="button" class="btn btn-outline">Cancel</button>
+          </div>
+        </form>
+
+        <div id="announcementsList" class="list"></div>
       </section>
     </main>
   </div>
 
-  <!-- PayPal SDK loads dynamically when needed -->
+  <!-- Course Details / Checkout Modal -->
+  <div id="courseModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="closeModalBtn" class="close">×</button>
+      <div id="modalCourse" class="card">
+        <div class="card-img"><img id="mImg" alt="Course image" /></div>
+        <div class="card-body">
+          <h3 id="mTitle">Course</h3>
+          <p id="mDesc"></p>
+          <div class="row spread">
+            <div id="mPrice" class="price">$0.00</div>
+            <button id="mBuyBtn" class="btn">Buy with PayPal</button>
+          </div>
+          <div id="paypalButtons" class="mt hidden"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <script type="module" src="./firebase-config.js"></script>
-  <script type="module" src="./app.js"></script>
+  <!-- Firebase + App -->
+  <script type="module" src="./js/app.js"></script>
 </body>
 </html>
